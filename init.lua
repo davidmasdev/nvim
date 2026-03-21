@@ -13,7 +13,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
     if vim.v.shell_error ~= 0 then
         vim.api.nvim_echo({
             { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-            { out, "WarningMsg" },
+            { out,                            "WarningMsg" },
             { "\nPress any key to exit..." },
         }, true, {})
         vim.fn.getchar()
@@ -27,8 +27,9 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 vim.opt.number = true
 vim.opt.clipboard = "unnamedplus"
+vim.o.guifont = "FiraCode Nerd Font:14"
+vim.opt.cursorline = true
 vim.opt.autochdir = true
-vim.o.guifont = "FiraCode Nerd Font:h14"
 
 -- Indentación
 vim.opt.tabstop = 4
@@ -56,7 +57,7 @@ require("lazy").setup({
         },
         {
             "maxmx03/solarized.nvim",
-            lazy = false, -- load at startup
+            lazy = false,    -- load at startup
             priority = 1000, -- load before other UI plugins
             -- config = function()
             --     vim.cmd.colorscheme("solarized")
@@ -90,7 +91,7 @@ require("lazy").setup({
             dependencies = { "mason.nvim" },
             config = function()
                 require("mason-lspconfig").setup({
-                    ensure_installed = { "lua_ls", "ts_ls", "pyright" },
+                    ensure_installed = { "lua_ls", "ts_ls", "pyright", "clangd", "jdtls" },
                 })
             end,
         },
@@ -102,7 +103,7 @@ require("lazy").setup({
             },
             config = function()
                 -- New 0.11+ API
-                local servers = { "lua_ls", "ts_ls", "pyright" }
+                local servers = { "lua_ls", "ts_ls", "pyright", "clangd", "jdtls" }
                 for _, server in ipairs(servers) do
                     vim.lsp.config(server, {})
                     vim.lsp.enable(server)
@@ -200,6 +201,77 @@ require("lazy").setup({
                 alpha.setup(dashboard.opts)
             end,
         },
+	{
+            'nvim-treesitter/nvim-treesitter',
+            lazy = false,
+            build = ':TSUpdate',
+            config = function()
+                require('nvim-treesitter').setup({
+                    ensure_installed = { 'javascript', 'typescript', 'python', 'c', 'cpp', 'lua' },
+                    highlight = { enable = true },
+                })
+            end,
+        },
+        {
+            "hrsh7th/nvim-cmp",
+            dependencies = {
+                "hrsh7th/cmp-nvim-lsp",     -- LSP source
+                "hrsh7th/cmp-buffer",       -- Buffer words
+                "hrsh7th/cmp-path",         -- File paths
+                "L3MON4D3/LuaSnip",         -- Snippet engine (required)
+                "saadparwaiz1/cmp_luasnip", -- Snippet source
+            },
+            config = function()
+                local cmp = require("cmp")
+                local luasnip = require("luasnip")
+
+                cmp.setup({
+                    snippet = {
+                        expand = function(args)
+                            luasnip.lsp_expand(args.body)
+                        end,
+                    },
+                    mapping = cmp.mapping.preset.insert({
+                        ["<C-Space>"] = cmp.mapping.complete(),
+                        ["<C-e>"]     = cmp.mapping.abort(),
+                        ["<CR>"]      = cmp.mapping.confirm({ select = true }),
+                        ["<Tab>"]     = cmp.mapping(function(fallback)
+                            if cmp.visible() then
+                                cmp.select_next_item()
+                            elseif luasnip.expand_or_jumpable() then
+                                luasnip.expand_or_jump()
+                            else
+                                fallback()
+                            end
+                        end, { "i", "s" }),
+                        ["<S-Tab>"]   = cmp.mapping(function(fallback)
+                            if cmp.visible() then
+                                cmp.select_prev_item()
+                            elseif luasnip.jumpable(-1) then
+                                luasnip.jump(-1)
+                            else
+                                fallback()
+                            end
+                        end, { "i", "s" }),
+                    }),
+                    sources = cmp.config.sources({
+                        { name = "nvim_lsp" },
+                        { name = "luasnip" },
+                        { name = "buffer" },
+                        { name = "path" },
+                    }),
+                })
+            end,
+        },
+        {
+            "iamcco/markdown-preview.nvim",
+            cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+            build = "cd app && npm install",
+            init = function()
+                vim.g.mkdp_filetypes = { "markdown" }
+            end,
+            ft = { "markdown" },
+        },
     },
     -- Colorscheme
     install = { colorscheme = { "kanagawa-dragon" } },
@@ -225,5 +297,26 @@ vim.keymap.set("n", "<leader>b", function()
     require("fzf-lua").buffers()
 end)
 
+vim.keymap.set("n", "<leader>r", function()
+    require("fzf-lua").lsp_references()
+end)
+
 -- Netrw
 vim.keymap.set("n", "<leader>e", vim.cmd.Ex)
+
+-- Neovide
+vim.g.neovide_cursor_animation_length = 0
+vim.g.neovide_cursor_trail_size = 0
+vim.g.neovide_scroll_animation_length = 0
+
+-- Treesitter
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { 'java', 'javascript', 'typescript', 'python', 'c', 'cpp', 'lua' },
+    callback = function()
+        vim.treesitter.start()
+    end,
+})
+
+-- Diagnostics
+vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
+vim.keymap.set("n", "<leader>D", vim.diagnostic.setloclist)
