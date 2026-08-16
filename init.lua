@@ -46,6 +46,19 @@ vim.opt.updatetime = 250
 vim.opt.timeoutlen = 400
 vim.opt.confirm = true
 
+-- Shell según el sistema operativo
+if vim.fn.has("win32") == 1 then
+    vim.opt.shell = "pwsh"
+    vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+    vim.opt.shellquote = ""
+    vim.opt.shellxquote = ""
+    vim.opt.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    vim.opt.shellpipe = "2>&1 | Tee-Object %s; exit $LastExitCode"
+elseif vim.fn.has("unix") == 1 then
+    vim.opt.shell = "fish"
+    vim.opt.shellcmdflag = "-c"
+end
+
 -- Indentación
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
@@ -255,16 +268,27 @@ require("lazy").setup({
         },
         {
             'nvim-treesitter/nvim-treesitter',
-            branch = 'master',
+            branch = 'main',
             lazy = false,
             build = ':TSUpdate',
             config = function()
-                require('nvim-treesitter.configs').setup({
-                    ensure_installed = {
-                        'javascript', 'typescript', 'python', 'c', 'cpp', 'lua',
-                        'markdown', 'markdown_inline',
+                local treesitter = require('nvim-treesitter')
+                local parsers = {
+                    'javascript', 'typescript', 'python', 'c', 'cpp', 'lua',
+                    'markdown', 'markdown_inline',
+                }
+
+                treesitter.install(parsers)
+
+                vim.api.nvim_create_autocmd('FileType', {
+                    pattern = {
+                        'javascript', 'javascriptreact',
+                        'typescript', 'typescriptreact',
+                        'python', 'c', 'cpp', 'lua', 'markdown',
                     },
-                    highlight = { enable = true },
+                    callback = function(args)
+                        pcall(vim.treesitter.start, args.buf)
+                    end,
                 })
             end,
         },
@@ -340,6 +364,11 @@ require("lazy").setup({
 
 --General
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+vim.keymap.set("n", "<leader>t", function()
+    vim.cmd("terminal")
+    vim.cmd("startinsert")
+end, { desc = "Open terminal" })
+vim.keymap.set("t", "<Esc><Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 
 -- Fzf
 vim.keymap.set("n", "<leader><leader>", function()
