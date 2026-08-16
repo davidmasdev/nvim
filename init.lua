@@ -362,6 +362,19 @@ require("lazy").setup({
 
 -- Keymaps
 
+local function current_buffer_dir()
+    if vim.bo.filetype == "oil" then
+        return require("oil").get_current_dir()
+    end
+
+    local buffer_name = vim.api.nvim_buf_get_name(0)
+    if buffer_name ~= "" and vim.bo.buftype == "" then
+        return vim.fs.dirname(buffer_name)
+    end
+
+    return vim.fn.getcwd()
+end
+
 --General
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 vim.keymap.set("n", "<leader>t", function()
@@ -372,11 +385,11 @@ vim.keymap.set("t", "<Esc><Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" 
 
 -- Fzf
 vim.keymap.set("n", "<leader><leader>", function()
-    require("fzf-lua").files()
+    require("fzf-lua").files({ cwd = current_buffer_dir() })
 end)
 
 vim.keymap.set("n", "<leader>/", function()
-    require("fzf-lua").live_grep()
+    require("fzf-lua").live_grep({ cwd = current_buffer_dir() })
 end)
 
 vim.keymap.set("n", "<leader>b", function()
@@ -388,7 +401,9 @@ vim.keymap.set("n", "<leader>r", function()
 end)
 
 -- Oil
-vim.keymap.set("n", "<leader>e", "<cmd>Oil<CR>", { desc = "Open parent directory" })
+vim.keymap.set("n", "<leader>e", function()
+    require("oil").open(current_buffer_dir())
+end, { desc = "Open current buffer directory" })
 
 -- Neovide
 vim.g.neovide_cursor_animation_length = 0
