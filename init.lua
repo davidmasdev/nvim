@@ -31,7 +31,7 @@ vim.g.loaded_ruby_provider = 0
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.clipboard = "unnamedplus"
-vim.o.guifont = "FiraCode Nerd Font:14"
+vim.o.guifont = "JetBrainsMono Nerd Font:h14"
 vim.opt.cursorline = true
 vim.opt.signcolumn = "yes"
 vim.opt.termguicolors = true
@@ -154,23 +154,59 @@ require("lazy").setup({
             end,
         },
         {
-            "idr4n/github-monochrome.nvim",
+            "rose-pine/neovim",
+            name = "rose-pine",
             lazy = false,
             priority = 1000,
             config = function()
-                require("github-monochrome").setup({
-                    style = "dark",
+                require("rose-pine").setup({
+                    variant = "main",
+                    dark_variant = "main",
                     styles = {
-                        comments = { italic = true },
-                        keywords = { bold = true },
-                        functions = {},
-                        statements = { bold = true },
-                        conditionals = { bold = true },
-                        loops = { bold = true },
-                        variables = {},
+                        bold = false,
+                        italic = true,
+                        transparency = false,
+                    },
+                    highlight_groups = {
+                        Comment = { fg = "muted", italic = true },
+                        Identifier = { fg = "text" },
+                        Function = { fg = "text" },
+                        Operator = { fg = "subtle" },
+                        Keyword = { fg = "iris", bold = true },
+                        Type = { fg = "foam" },
+                        String = { fg = "gold" },
+                        Constant = { fg = "gold" },
+
+                        ["@variable"] = { fg = "text" },
+                        ["@variable.member"] = { fg = "text" },
+                        ["@variable.parameter"] = { fg = "text" },
+                        ["@property"] = { fg = "text" },
+                        ["@function"] = { fg = "text" },
+                        ["@function.call"] = { fg = "text" },
+                        ["@function.method"] = { fg = "text" },
+                        ["@function.method.call"] = { fg = "text" },
+                        ["@module"] = { fg = "text" },
+                        ["@operator"] = { fg = "subtle" },
+                        ["@punctuation"] = { fg = "subtle" },
+                        ["@keyword"] = { fg = "iris", bold = true },
+                        ["@type"] = { fg = "foam" },
+                        ["@string"] = { fg = "gold" },
+                        ["@constant"] = { fg = "gold" },
+                        ["@number"] = { fg = "gold" },
+                        ["@boolean"] = { fg = "gold" },
+                        ["@comment"] = { fg = "muted", italic = true },
+
+                        ["@lsp.type.variable"] = { fg = "text" },
+                        ["@lsp.type.parameter"] = { fg = "text" },
+                        ["@lsp.type.property"] = { fg = "text" },
+                        ["@lsp.type.function"] = { fg = "text" },
+                        ["@lsp.type.method"] = { fg = "text" },
+                        ["@lsp.type.class"] = { fg = "foam" },
+                        ["@lsp.type.interface"] = { fg = "foam" },
+                        ["@lsp.type.type"] = { fg = "foam" },
                     },
                 })
-                vim.cmd.colorscheme("github-monochrome-dark")
+                vim.cmd.colorscheme("rose-pine")
             end,
         },
         {
@@ -294,7 +330,7 @@ require("lazy").setup({
         },
     },
     -- Colorscheme
-    install = { colorscheme = { "github-monochrome-dark" } },
+    install = { colorscheme = { "rose-pine" } },
     -- automatically check for plugin updates
     checker = { enabled = true },
     rocks = { enabled = false },
