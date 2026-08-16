@@ -25,11 +25,26 @@ vim.opt.rtp:prepend(lazypath)
 -- General options
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
 vim.opt.number = true
+vim.opt.relativenumber = true
 vim.opt.clipboard = "unnamedplus"
 vim.o.guifont = "FiraCode Nerd Font:14"
 vim.opt.cursorline = true
-vim.opt.autochdir = true
+vim.opt.signcolumn = "yes"
+vim.opt.termguicolors = true
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.undofile = true
+vim.opt.scrolloff = 8
+vim.opt.sidescrolloff = 8
+vim.opt.updatetime = 250
+vim.opt.timeoutlen = 400
+vim.opt.confirm = true
 
 -- Indentación
 vim.opt.tabstop = 4
@@ -56,12 +71,13 @@ require("lazy").setup({
             ---@diagnostic enable: missing-fields
         },
         {
-            "maxmx03/solarized.nvim",
-            lazy = false,    -- load at startup
-            priority = 1000, -- load before other UI plugins
-            -- config = function()
-            --     vim.cmd.colorscheme("solarized")
-            -- end,
+            "stevearc/oil.nvim",
+            lazy = false,
+            dependencies = { "nvim-tree/nvim-web-devicons" },
+            opts = {
+                default_file_explorer = true,
+                columns = { "icon" },
+            },
         },
         {
             "nvim-lualine/lualine.nvim",
@@ -69,7 +85,7 @@ require("lazy").setup({
             config = function()
                 require("lualine").setup({
                     options = {
-                        theme = "kanagawa",
+                        theme = "auto",
                         section_separators = "",
                         component_separators = "",
                     },
@@ -92,6 +108,7 @@ require("lazy").setup({
             config = function()
                 require("mason-lspconfig").setup({
                     ensure_installed = { "lua_ls", "ts_ls", "pyright", "clangd", "jdtls" },
+                    automatic_enable = false,
                 })
             end,
         },
@@ -102,10 +119,10 @@ require("lazy").setup({
                 "williamboman/mason-lspconfig.nvim",
             },
             config = function()
-                -- New 0.11+ API
+                local capabilities = require("cmp_nvim_lsp").default_capabilities()
                 local servers = { "lua_ls", "ts_ls", "pyright", "clangd", "jdtls" }
                 for _, server in ipairs(servers) do
-                    vim.lsp.config(server, {})
+                    vim.lsp.config(server, { capabilities = capabilities })
                     vim.lsp.enable(server)
                 end
 
@@ -131,30 +148,29 @@ require("lazy").setup({
                     -- formatear al guardar
                     format_on_save = {
                         timeout_ms = 500,
-                        lsp_fallback = true,
+                        lsp_format = "fallback",
                     },
                 })
             end,
         },
         {
-            "sainnhe/gruvbox-material",
+            "idr4n/github-monochrome.nvim",
             lazy = false,
             priority = 1000,
             config = function()
-                vim.g.gruvbox_material_background = "medium" -- 'hard', 'medium', 'soft'
-                vim.g.gruvbox_material_foreground = "material" -- 'material', 'mix', 'original'
-                -- vim.cmd.colorscheme("gruvbox-material")
-            end,
-        },
-        {
-            "rebelot/kanagawa.nvim",
-            lazy = false,
-            priority = 1000,
-            config = function()
-                require("kanagawa").setup({
-                    theme = "wave", -- 'wave', 'dragon', 'lotus'
+                require("github-monochrome").setup({
+                    style = "dark",
+                    styles = {
+                        comments = { italic = true },
+                        keywords = { bold = true },
+                        functions = {},
+                        statements = { bold = true },
+                        conditionals = { bold = true },
+                        loops = { bold = true },
+                        variables = {},
+                    },
                 })
-                vim.cmd.colorscheme("kanagawa-dragon")
+                vim.cmd.colorscheme("github-monochrome-dark")
             end,
         },
         {
@@ -201,13 +217,17 @@ require("lazy").setup({
                 alpha.setup(dashboard.opts)
             end,
         },
-	{
+        {
             'nvim-treesitter/nvim-treesitter',
+            branch = 'master',
             lazy = false,
             build = ':TSUpdate',
             config = function()
-                require('nvim-treesitter').setup({
-                    ensure_installed = { 'javascript', 'typescript', 'python', 'c', 'cpp', 'lua' },
+                require('nvim-treesitter.configs').setup({
+                    ensure_installed = {
+                        'javascript', 'typescript', 'python', 'c', 'cpp', 'lua',
+                        'markdown', 'markdown_inline',
+                    },
                     highlight = { enable = true },
                 })
             end,
@@ -274,9 +294,10 @@ require("lazy").setup({
         },
     },
     -- Colorscheme
-    install = { colorscheme = { "kanagawa-dragon" } },
+    install = { colorscheme = { "github-monochrome-dark" } },
     -- automatically check for plugin updates
     checker = { enabled = true },
+    rocks = { enabled = false },
 })
 
 -- Keymaps
@@ -301,22 +322,22 @@ vim.keymap.set("n", "<leader>r", function()
     require("fzf-lua").lsp_references()
 end)
 
--- Netrw
-vim.keymap.set("n", "<leader>e", vim.cmd.Ex)
+-- Oil
+vim.keymap.set("n", "<leader>e", "<cmd>Oil<CR>", { desc = "Open parent directory" })
 
 -- Neovide
 vim.g.neovide_cursor_animation_length = 0
 vim.g.neovide_cursor_trail_size = 0
 vim.g.neovide_scroll_animation_length = 0
 
--- Treesitter
-vim.api.nvim_create_autocmd("FileType", {
-    pattern = { 'java', 'javascript', 'typescript', 'python', 'c', 'cpp', 'lua' },
-    callback = function()
-        vim.treesitter.start()
-    end,
+-- Diagnostics
+vim.diagnostic.config({
+    virtual_text = true,
+    severity_sort = true,
+    float = { border = "rounded" },
+    signs = true,
+    underline = true,
 })
 
--- Diagnostics
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 vim.keymap.set("n", "<leader>D", vim.diagnostic.setloclist)
