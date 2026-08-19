@@ -55,7 +55,7 @@ if vim.fn.has("win32") == 1 then
     vim.opt.shellredir = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
     vim.opt.shellpipe = "2>&1 | Tee-Object %s; exit $LastExitCode"
 elseif vim.fn.has("unix") == 1 then
-    vim.opt.shell = "fish"
+    vim.opt.shell = "bash"
     vim.opt.shellcmdflag = "-c"
 end
 
@@ -351,6 +351,17 @@ require("lazy").setup({
                 vim.g.mkdp_filetypes = { "markdown" }
             end,
             ft = { "markdown" },
+        },
+        {
+            "lervag/vimtex",
+            tag = "v2.17",
+            lazy = false,
+            init = function()
+                vim.g.vimtex_compiler_method = "latexmk"
+                vim.g.vimtex_view_method = "general"
+                vim.g.vimtex_view_general_viewer = "xdg-open"
+                vim.g.vimtex_view_general_options = "@pdf"
+            end,
         },
     },
     -- Colorscheme
